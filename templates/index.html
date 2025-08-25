@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Textract Table Extractor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f7f7f7;
+    }
+    h1 {
+      color: #333;
+    }
+    .upload-area {
+      width: 500px;
+      height: 200px;
+      border: 3px dashed #ccc;
+      border-radius: 10px;
+      margin: 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .upload-area:hover {
+      border-color: #258cff;
+      background-color: #f0f8ff;
+    }
+    .upload-area.highlight {
+      border-color: #258cff;
+      background-color: #e6f2ff;
+    }
+    .upload-area p {
+      margin: 10px;
+      color: #666;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .btn {
+      padding: 10px 20px;
+      background-color: #258cff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .message {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 10px;
+      background-color: #ffebee;
+      color: #c62828;
+      border-radius: 5px;
+    }
+    .success {
+      background-color: #e8f5e8;
+      color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📄 Upload Document for Table Extraction</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="message {{ 'success' if category == 'success' else '' }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if download %}
+    <p>✅ Table extracted successfully!</p>
+    <a href="{{ url_for('download_file', filename=download) }}" class="btn">⬇️ Download Excel</a>
+  {% else %}
+    <form method="POST" enctype="multipart/form-data" id="upload-form">
+      <label for="file-input" class="upload-area" id="drop-area">
+        <span>📁 Drop file here or click to upload</span>
+        <p>Supports PNG, JPG, JPEG, PDF</p>
+        <input type="file" name="file" id="file-input" accept=".png,.jpg,.jpeg,.pdf" />
+      </label>
+      <div style="text-align:center;">
+        <button type="submit" class="btn">Upload & Process</button>
+      </div>
+    </form>
+  {% endif %}
+
+  <script>
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('file-input');
+
+    dropArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        dropArea.querySelector('span').textContent = '✅ ' + fileInput.files[0].name;
+      }
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropArea.addEventListener(eventName, () => dropArea.classList.add('highlight'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, () => dropArea.classList.remove('highlight'), false);
+    });
+
+    dropArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      fileInput.files = files;
+      if (files.length > 0) {
+        dropArea.querySelector('span').textContent = '✅ ' + files[0].name;
+      }
+    }
+  </script>
+
+</body>
+</html>
